@@ -317,6 +317,38 @@ html{scroll-behavior:smooth;}
 .sync-chip.error  {background:rgba(176,112,112,.15);color:#8A3A3A;border-color:#C09090;}
 .sync-chip.off    {display:none;}
 .drag-ghost{opacity:.3!important;border:2px dashed var(--sage)!important;}
+
+/* ── QUEST TAB ── */
+.level-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
+.level-card{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.level-card .lc-icon{font-size:1.6rem;margin-bottom:2px;}
+.level-card .lc-rank{font-size:.9rem;font-weight:700;color:var(--sage);}
+.level-card .lc-num{font-size:.68rem;color:var(--muted);margin-bottom:6px;}
+.level-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin:4px 0;}
+.level-fill{height:100%;background:var(--sage);border-radius:3px;transition:width .4s;}
+.level-xp{font-size:.62rem;color:var(--muted);}
+.dq-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+.dq-item:last-child{border-bottom:none;padding-bottom:0;}
+.dq-ico{font-size:1.3rem;flex:0 0 auto;}
+.dq-info{flex:1;}
+.dq-title{font-size:.84rem;font-weight:600;color:var(--text);}
+.dq-desc{font-size:.72rem;color:var(--muted);margin-top:1px;}
+.dq-reward{font-size:.72rem;color:#B8941C;font-weight:600;margin-top:2px;}
+.dq-done{color:var(--sage);font-size:1.1rem;font-weight:700;}
+.dq-claim{background:var(--sage);color:#fff;border:none;border-radius:8px;padding:5px 10px;font-size:.72rem;cursor:pointer;font-family:'Prompt',sans-serif;}
+.achiev-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+.achiev-card{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px;display:flex;align-items:flex-start;gap:8px;}
+.achiev-card.locked{opacity:.4;filter:grayscale(1);}
+.achiev-ico{font-size:1.4rem;flex:0 0 auto;}
+.achiev-name{font-size:.72rem;font-weight:700;color:var(--text);}
+.achiev-desc{font-size:.62rem;color:var(--muted);margin-top:1px;}
+.wk-challenge{background:linear-gradient(135deg,var(--sage) 0%,#5a8a60 100%);border-radius:12px;padding:14px;color:#fff;margin-top:4px;}
+.wk-ch-title{font-size:.9rem;font-weight:700;}
+.wk-ch-desc{font-size:.74rem;opacity:.88;margin:3px 0 8px;}
+.wk-prog-bar{height:7px;background:rgba(255,255,255,.3);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+.wk-prog-fill{height:100%;background:#fff;border-radius:4px;transition:width .4s;}
+.wk-ch-foot{display:flex;justify-content:space-between;align-items:center;font-size:.74rem;}
+.wk-claim-btn{background:#fff;color:var(--sage);border:none;border-radius:7px;padding:5px 11px;font-size:.72rem;cursor:pointer;font-weight:600;font-family:'Prompt',sans-serif;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -333,6 +365,7 @@ html{scroll-behavior:smooth;}
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="showPage('home')"><span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
   <button class="nav-item" onclick="showPage('food')"><span class="nav-icon">🍽️</span><span class="nav-label">Food</span></button>
+  <button class="nav-item" onclick="showPage('quest')"><span class="nav-icon">🎯</span><span class="nav-label">Quest</span></button>
   <button class="nav-item" onclick="showPage('fit')"><span class="nav-icon">💪</span><span class="nav-label">Fit</span></button>
   <button class="nav-item" onclick="showPage('sleep')"><span class="nav-icon">😴</span><span class="nav-label">Sleep</span></button>
   <button class="nav-item" onclick="showPage('more')"><span class="nav-icon">⚙️</span><span class="nav-label">More</span></button>
@@ -404,6 +437,59 @@ html{scroll-behavior:smooth;}
   </div>
 </div>
 
+<!-- ══════════════════ QUEST ══════════════════ -->
+<div class="page" id="page-quest">
+
+  <!-- Level Cards -->
+  <div class="card">
+    <div class="card-title">Your Rank</div>
+    <div class="level-grid">
+      <div class="level-card">
+        <div class="lc-icon">🏃</div>
+        <div class="lc-rank" id="cardioRankLabel">Rookie</div>
+        <div class="lc-num" id="cardioLvLabel">Cardio Lv.1</div>
+        <div class="level-bar"><div class="level-fill" id="cardioLvBar" style="width:0%"></div></div>
+        <div class="level-xp" id="cardioLvXP">0 / 200 XP</div>
+      </div>
+      <div class="level-card">
+        <div class="lc-icon">💪</div>
+        <div class="lc-rank" id="strRankLabel">Rookie</div>
+        <div class="lc-num" id="strLvLabel">Strength Lv.1</div>
+        <div class="level-bar"><div class="level-fill" id="strLvBar" style="width:0%"></div></div>
+        <div class="level-xp" id="strLvXP">0 / 200 XP</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Daily Quests -->
+  <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div class="card-title" style="margin:0;">Daily Quests</div>
+      <div style="font-size:.7rem;color:var(--muted);" id="questDateLabel"></div>
+    </div>
+    <div id="dailyQuestList"></div>
+  </div>
+
+  <!-- Weekly Challenge -->
+  <div class="card">
+    <div class="card-title">Weekly Challenge</div>
+    <div id="weeklyChallenge"></div>
+  </div>
+
+  <!-- Streak Bonuses -->
+  <div class="card">
+    <div class="card-title">Streak Bonuses</div>
+    <div id="questBonuses"></div>
+  </div>
+
+  <!-- Achievements -->
+  <div class="card">
+    <div class="card-title">Achievements <span id="achievCount" style="font-size:.75rem;color:var(--muted);font-weight:400;"></span></div>
+    <div id="achievementList"></div>
+  </div>
+
+</div>
+
 <!-- ══════════════════ FIT ══════════════════ -->
 <div class="page" id="page-fit">
 
@@ -432,9 +518,7 @@ html{scroll-behavior:smooth;}
   <div class="card">
     <div class="card-title">Weekly Quest</div>
     <div id="fitQuests"></div>
-    <div class="hr"></div>
-    <div class="card-title">Streak Bonuses</div>
-    <div id="fitBonuses"></div>
+
   </div>
 
   <!-- Card 4: Workout streak heatmap -->
@@ -699,6 +783,262 @@ const WTYPES = {
   football: {label:'Football', emoji:'⚽', base:11},
   walk:     {label:'Walk',     emoji:'🚶', base:6 },
 };
+/* ═══ LEVEL SYSTEM ═══ */
+const CARDIO_TYPES   = new Set(['cardio','swim','walk','football']);
+const STRENGTH_TYPES = new Set(['strength','hiit']);
+
+const LEVELS = [
+  {lv:1,  xp:0,     rank:'Rookie',   emoji:'🩹'},
+  {lv:2,  xp:200,   rank:'Beginner', emoji:'🌱'},
+  {lv:3,  xp:500,   rank:'Trainee',  emoji:'🏃'},
+  {lv:4,  xp:1000,  rank:'Active',   emoji:'💪'},
+  {lv:5,  xp:1800,  rank:'Athlete',  emoji:'⚡'},
+  {lv:6,  xp:2800,  rank:'Fighter',  emoji:'🔥'},
+  {lv:7,  xp:4200,  rank:'Warrior',  emoji:'🦾'},
+  {lv:8,  xp:6000,  rank:'Champion', emoji:'🏆'},
+  {lv:9,  xp:8500,  rank:'Elite',    emoji:'💎'},
+  {lv:10, xp:12000, rank:'Legend',   emoji:'👑'},
+];
+
+/* Achievements grouped by phase — check: fn(state) → bool */
+const ACHIEV_DEF = [
+  // ─── Phase 1 · Getting Started 🌱 ───
+  {phase:1, id:'first_sweat',   emoji:'🥇', name:'First Sweat',       desc:'Log your first workout'},
+  {phase:1, id:'first_sleep',   emoji:'💤', name:'First Rest',         desc:'Log your first sleep'},
+  {phase:1, id:'early_bird',    emoji:'🌅', name:'Early Bird',         desc:'Go to bed before 22:00'},
+  {phase:1, id:'cardio_lv2',    emoji:'🏃', name:'Cardio Beginner',    desc:'Reach Cardio Level 2'},
+  {phase:1, id:'str_lv2',       emoji:'💪', name:'Iron Start',         desc:'Reach Strength Level 2'},
+  {phase:1, id:'sleep_goal3',   emoji:'🌙', name:'Sweet Dreams',       desc:'Hit sleep goal 3 nights'},
+  {phase:1, id:'coins_100',     emoji:'🪙', name:'First 100',          desc:'Earn 100 coins total'},
+  {phase:1, id:'streak_3',      emoji:'🔆', name:'3-Day Streak',       desc:'3-day workout streak'},
+  // ─── Phase 2 · Building Habits 🏃 ───
+  {phase:2, id:'workout_10',    emoji:'📅', name:'10 Sessions',        desc:'Log 10 workouts'},
+  {phase:2, id:'cardio_lv3',    emoji:'🏃', name:'Cardio Trainee',     desc:'Reach Cardio Level 3'},
+  {phase:2, id:'str_lv3',       emoji:'💪', name:'Iron Trainee',       desc:'Reach Strength Level 3'},
+  {phase:2, id:'zone3_first',   emoji:'💚', name:'Zone 3 Unlock',      desc:'Log first Zone 3 workout'},
+  {phase:2, id:'sleep_goal7',   emoji:'😴', name:'Sleep Routine',      desc:'Hit sleep goal 7 nights'},
+  {phase:2, id:'sleep_streak3', emoji:'🛌', name:'3-Night Sleeper',    desc:'3-day sleep streak'},
+  {phase:2, id:'streak_7',      emoji:'🔥', name:'Week Warrior',       desc:'7-day workout streak'},
+  {phase:2, id:'coins_300',     emoji:'💰', name:'Saving Up',          desc:'Earn 300 coins total'},
+  // ─── Phase 3 · Athlete ⚡ ───
+  {phase:3, id:'workout_25',    emoji:'🏅', name:'25 Sessions',        desc:'Log 25 workouts'},
+  {phase:3, id:'cardio_lv4',    emoji:'⚡', name:'Cardio Active',      desc:'Reach Cardio Level 4'},
+  {phase:3, id:'str_lv4',       emoji:'⚡', name:'Strength Active',    desc:'Reach Strength Level 4'},
+  {phase:3, id:'cardio_lv5',    emoji:'🏃', name:'Cardio Athlete',     desc:'Reach Cardio Level 5'},
+  {phase:3, id:'str_lv5',       emoji:'💪', name:'Strength Athlete',   desc:'Reach Strength Level 5'},
+  {phase:3, id:'zone4_first',   emoji:'🟠', name:'Zone 4 Entry',       desc:'Log first Zone 4 workout'},
+  {phase:3, id:'sleep_goal14',  emoji:'🌙', name:'Dream Achiever',     desc:'Hit sleep goal 14 nights'},
+  {phase:3, id:'sleep_streak7', emoji:'😴', name:'Sleep Master',       desc:'7-day sleep streak'},
+  {phase:3, id:'streak_14',     emoji:'🏅', name:'Fortnight Fighter',  desc:'14-day workout streak'},
+  {phase:3, id:'coins_500',     emoji:'🪙', name:'Coin Collector',     desc:'Earn 500 coins total'},
+  // ─── Phase 4 · Fighter 🔥 ───
+  {phase:4, id:'workout_50',    emoji:'🏋️', name:'50 Sessions',        desc:'Log 50 workouts'},
+  {phase:4, id:'cardio_lv6',    emoji:'🔥', name:'Cardio Fighter',     desc:'Reach Cardio Level 6'},
+  {phase:4, id:'str_lv6',       emoji:'🔥', name:'Strength Fighter',   desc:'Reach Strength Level 6'},
+  {phase:4, id:'cardio_lv7',    emoji:'🦾', name:'Cardio Warrior',     desc:'Reach Cardio Level 7'},
+  {phase:4, id:'str_lv7',       emoji:'🦾', name:'Strength Warrior',   desc:'Reach Strength Level 7'},
+  {phase:4, id:'zone4_5x',      emoji:'🟠', name:'Zone 4 Regular',     desc:'Log 5 Zone 4 workouts'},
+  {phase:4, id:'zone5_first',   emoji:'🔴', name:'Red Zone!',          desc:'Log first Zone 5 workout'},
+  {phase:4, id:'sleep_goal30',  emoji:'🌟', name:'Sleep Champion',     desc:'Hit sleep goal 30 nights'},
+  {phase:4, id:'streak_30',     emoji:'📆', name:'Monthly Grind',      desc:'30-day workout streak'},
+  {phase:4, id:'coins_1000',    emoji:'💎', name:'Coin Hoarder',       desc:'Earn 1,000 coins total'},
+  // ─── Phase 5 · Champion 🏆 ───
+  {phase:5, id:'workout_100',   emoji:'💯', name:'100 Sessions',       desc:'Log 100 workouts'},
+  {phase:5, id:'cardio_lv8',    emoji:'🏆', name:'Cardio Champion',    desc:'Reach Cardio Level 8'},
+  {phase:5, id:'str_lv8',       emoji:'🏆', name:'Strength Champion',  desc:'Reach Strength Level 8'},
+  {phase:5, id:'cardio_lv9',    emoji:'💎', name:'Cardio Elite',       desc:'Reach Cardio Level 9'},
+  {phase:5, id:'str_lv9',       emoji:'💎', name:'Strength Elite',     desc:'Reach Strength Level 9'},
+  {phase:5, id:'zone4_20x',     emoji:'🟠', name:'Zone 4 Machine',     desc:'Log 20 Zone 4 workouts'},
+  {phase:5, id:'zone5_5x',      emoji:'🔴', name:'Max Effort x5',      desc:'Log 5 Zone 5 workouts'},
+  {phase:5, id:'sleep_goal60',  emoji:'👑', name:'Sleep Legend',       desc:'Hit sleep goal 60 nights'},
+  {phase:5, id:'streak_60',     emoji:'📅', name:'60-Day Beast',       desc:'60-day workout streak'},
+  {phase:5, id:'coins_3000',    emoji:'💰', name:'Wealth Accumulator', desc:'Earn 3,000 coins total'},
+  // ─── Phase 6 · Legend 👑 ───
+  {phase:6, id:'workout_200',   emoji:'🎖️', name:'200 Sessions',       desc:'Log 200 workouts'},
+  {phase:6, id:'cardio_lv10',   emoji:'👑', name:'Cardio Legend',      desc:'Reach Cardio Level 10'},
+  {phase:6, id:'str_lv10',      emoji:'👑', name:'Strength Legend',    desc:'Reach Strength Level 10'},
+  {phase:6, id:'zone5_10x',     emoji:'🔴', name:'Zone 5 Legend',      desc:'Log 10 Zone 5 workouts'},
+  {phase:6, id:'streak_100',    emoji:'🌈', name:'Century Streak',     desc:'100-day workout streak'},
+  {phase:6, id:'coins_5000',    emoji:'👑', name:'Coin Emperor',       desc:'Earn 5,000 coins total'},
+  {phase:6, id:'streak_best_30',emoji:'⭐', name:'Peak Performer',     desc:'Best streak ever: 30+ days'},
+];
+
+const ACHIEV_CHECKS = {
+  first_sweat:   s=>s.workoutLogs.length>=1,
+  first_sleep:   s=>s.sleepLogs.length>=1,
+  early_bird:    s=>s.sleepLogs.some(l=>{ const h=parseInt((l.bedtime||'23').split(':')[0]); return h>=20&&h<=21; }),
+  cardio_lv2:    s=>getXP(s,'cardio')>=200,
+  str_lv2:       s=>getXP(s,'strength')>=200,
+  sleep_goal3:   s=>(s.sleepGoalHits||0)>=3,
+  coins_100:     s=>(s.totalCoinsEarned||0)>=100,
+  streak_3:      s=>(s.workoutStreakBest||0)>=3,
+  workout_10:    s=>s.workoutLogs.length>=10,
+  cardio_lv3:    s=>getXP(s,'cardio')>=500,
+  str_lv3:       s=>getXP(s,'strength')>=500,
+  zone3_first:   s=>s.workoutLogs.some(l=>(l.hrZone||0)>=3),
+  sleep_goal7:   s=>(s.sleepGoalHits||0)>=7,
+  sleep_streak3: s=>(s.sleepStreak||0)>=3,
+  streak_7:      s=>(s.workoutStreakBest||0)>=7,
+  coins_300:     s=>(s.totalCoinsEarned||0)>=300,
+  workout_25:    s=>s.workoutLogs.length>=25,
+  cardio_lv4:    s=>getXP(s,'cardio')>=1000,
+  str_lv4:       s=>getXP(s,'strength')>=1000,
+  cardio_lv5:    s=>getXP(s,'cardio')>=1800,
+  str_lv5:       s=>getXP(s,'strength')>=1800,
+  zone4_first:   s=>s.workoutLogs.some(l=>(l.hrZone||0)>=4),
+  sleep_goal14:  s=>(s.sleepGoalHits||0)>=14,
+  sleep_streak7: s=>(s.sleepStreak||0)>=7,
+  streak_14:     s=>(s.workoutStreakBest||0)>=14,
+  coins_500:     s=>(s.totalCoinsEarned||0)>=500,
+  workout_50:    s=>s.workoutLogs.length>=50,
+  cardio_lv6:    s=>getXP(s,'cardio')>=2800,
+  str_lv6:       s=>getXP(s,'strength')>=2800,
+  cardio_lv7:    s=>getXP(s,'cardio')>=4200,
+  str_lv7:       s=>getXP(s,'strength')>=4200,
+  zone4_5x:      s=>s.workoutLogs.filter(l=>(l.hrZone||0)>=4).length>=5,
+  zone5_first:   s=>s.workoutLogs.some(l=>(l.hrZone||0)>=5),
+  sleep_goal30:  s=>(s.sleepGoalHits||0)>=30,
+  streak_30:     s=>(s.workoutStreakBest||0)>=30,
+  coins_1000:    s=>(s.totalCoinsEarned||0)>=1000,
+  workout_100:   s=>s.workoutLogs.length>=100,
+  cardio_lv8:    s=>getXP(s,'cardio')>=6000,
+  str_lv8:       s=>getXP(s,'strength')>=6000,
+  cardio_lv9:    s=>getXP(s,'cardio')>=8500,
+  str_lv9:       s=>getXP(s,'strength')>=8500,
+  zone4_20x:     s=>s.workoutLogs.filter(l=>(l.hrZone||0)>=4).length>=20,
+  zone5_5x:      s=>s.workoutLogs.filter(l=>(l.hrZone||0)>=5).length>=5,
+  sleep_goal60:  s=>(s.sleepGoalHits||0)>=60,
+  streak_60:     s=>(s.workoutStreakBest||0)>=60,
+  coins_3000:    s=>(s.totalCoinsEarned||0)>=3000,
+  workout_200:   s=>s.workoutLogs.length>=200,
+  cardio_lv10:   s=>getXP(s,'cardio')>=12000,
+  str_lv10:      s=>getXP(s,'strength')>=12000,
+  zone5_10x:     s=>s.workoutLogs.filter(l=>(l.hrZone||0)>=5).length>=10,
+  streak_100:    s=>(s.workoutStreakBest||0)>=100,
+  coins_5000:    s=>(s.totalCoinsEarned||0)>=5000,
+  streak_best_30:s=>(s.workoutStreakBest||0)>=30,
+};
+
+/* ═══ DAILY QUEST TEMPLATES (scale by rank level 1–10) ═══ */
+function getDailyQuestTemplates(cardioLv, strLv){
+  const cd = cardioLv, sl = strLv;
+  const cMin = [15,15,25,25,35,35,45,45,60,60][cd-1];
+  const sMin = [15,15,25,25,35,35,45,45,60,60][sl-1];
+  const cZone= cd<=4?'any zone':cd<=6?'Zone 2+':cd<=8?'Zone 3+':'Zone 4+';
+  const sZone= sl<=4?'any zone':sl<=6?'Zone 2+':sl<=8?'Zone 3+':'Zone 4+';
+  return [
+    {id:'dq_cardio', emoji:'🏃', title:'Cardio Session',
+     desc:`Do ${cMin}+ min cardio (${cZone})`,
+     reward:Math.round(15+cd*3), type:'cardio', minMin:cMin,
+     check:(logs,d)=>logs.filter(l=>l.date===d&&CARDIO_TYPES.has(l.type)&&l.duration>=cMin).length>0},
+    {id:'dq_strength', emoji:'💪', title:'Strength Training',
+     desc:`Do ${sMin}+ min strength/HIIT (${sZone})`,
+     reward:Math.round(15+sl*3), type:'strength', minMin:sMin,
+     check:(logs,d)=>logs.filter(l=>l.date===d&&STRENGTH_TYPES.has(l.type)&&l.duration>=sMin).length>0},
+    {id:'dq_sleep', emoji:'😴', title:'Hit Sleep Goal',
+     desc:`Sleep ${S.profile.sleepGoal||8}+ hours`,
+     reward:25, type:'sleep',
+     check:(logs,d,fLogs,sLogs)=>sLogs.filter(l=>l.date===d&&l.durationHours>=(S.profile.sleepGoal||7.5)).length>0},
+  ];
+}
+
+function getWeeklyChallenge(cardioLv, strLv){
+  const avgLv = Math.round((cardioLv+strLv)/2);
+  const targets = [100,130,160,200,230,260,300,340,380,420];
+  const mins = targets[avgLv-1]||100;
+  return {
+    title:`${mins}-Minute Week`,
+    desc:`Log ${mins}+ total training minutes this week`,
+    reward: Math.round(50 + avgLv*10),
+    target: mins,
+  };
+}
+
+function getXP(state, cat){
+  return (state.workoutLogs||[]).reduce((sum,l)=>{
+    const inCat = cat==='cardio'?CARDIO_TYPES.has(l.type):STRENGTH_TYPES.has(l.type);
+    if(!inCat) return sum;
+    const mult = l.hrMult||1.0;
+    return sum + Math.round((l.duration||0)*mult);
+  }, 0);
+}
+
+function getLevelInfo(xp){
+  let cur = LEVELS[0], next = LEVELS[1];
+  for(let i=LEVELS.length-1;i>=0;i--){
+    if(xp>=LEVELS[i].xp){ cur=LEVELS[i]; next=LEVELS[i+1]||null; break; }
+  }
+  const xpInLv  = xp - cur.xp;
+  const xpToNext= next ? next.xp - cur.xp : 1;
+  const pct     = next ? Math.min(100,Math.round(xpInLv/xpToNext*100)) : 100;
+  return {...cur, xpInLv, xpToNext, pct, xp, next};
+}
+
+function checkAchievements(){
+  if(!S.achievements) S.achievements=[];
+  let newOnes=[];
+  ACHIEV_DEF.forEach(a=>{
+    const fn = ACHIEV_CHECKS[a.id];
+    if(!S.achievements.includes(a.id) && fn && fn(S)){
+      S.achievements.push(a.id);
+      newOnes.push(a);
+    }
+  });
+  if(newOnes.length){ save(); newOnes.forEach(a=>showToast(`🏅 Unlocked: ${a.name}!`)); }
+}
+
+function claimDailyQuest(qid){
+  const d=today();
+  if(!S.dailyQuestLog) S.dailyQuestLog={};
+  if(!S.dailyQuestLog[d]) S.dailyQuestLog[d]=[];
+  if(S.dailyQuestLog[d].includes(qid)) return;
+  const templates=getDailyQuestTemplates(
+    getLevelInfo(getXP(S,'cardio')).lv,
+    getLevelInfo(getXP(S,'strength')).lv
+  );
+  const q=templates.find(t=>t.id===qid);
+  if(!q) return;
+  S.dailyQuestLog[d].push(qid);
+  S.coins=(S.coins||0)+q.reward;
+  S.totalCoinsEarned=(S.totalCoinsEarned||0)+q.reward;
+  save(); renderAll();
+  showToast(`+${q.reward}🪙 ${q.title} complete!`);
+  checkAchievements();
+}
+
+function claimBonus(days){
+  const key=`${days}-${weekStart()}`;
+  if(!S.claimedBonuses) S.claimedBonuses=[];
+  if(S.claimedBonuses.includes(key)){ showToast('Already claimed'); return; }
+  const b=STREAK_BONUSES.find(x=>x.days===days);
+  if(!b||S.workoutStreak<days){ showToast('Not enough streak'); return; }
+  S.claimedBonuses.push(key);
+  S.coins=(S.coins||0)+b.coins;
+  S.totalCoinsEarned=(S.totalCoinsEarned||0)+b.coins;
+  save(); renderAll();
+  showToast(`+${b.coins}🪙 ${b.label} claimed!`);
+  checkAchievements();
+}
+
+function claimWeeklyChallenge(){
+  const wk=weekStart();
+  if(!S.weeklyChallengeClaimed) S.weeklyChallengeClaimed={};
+  if(S.weeklyChallengeClaimed[wk]) return;
+  const cardioLv=getLevelInfo(getXP(S,'cardio')).lv;
+  const strLv   =getLevelInfo(getXP(S,'strength')).lv;
+  const ch=getWeeklyChallenge(cardioLv,strLv);
+  const totalMins=(S.workoutLogs||[]).filter(l=>l.date>=wk).reduce((s,l)=>s+(l.duration||0),0);
+  if(totalMins<ch.target){ showToast('Not done yet — keep training!'); return; }
+  S.weeklyChallengeClaimed[wk]=true;
+  S.coins=(S.coins||0)+ch.reward;
+  S.totalCoinsEarned=(S.totalCoinsEarned||0)+ch.reward;
+  save(); renderAll();
+  showToast(`+${ch.reward}🪙 Weekly Challenge complete!`);
+  checkAchievements();
+}
+
+function getWeekMins(){ return (S.workoutLogs||[]).filter(l=>l.date>=weekStart()).reduce((s,l)=>s+(l.duration||0),0); }
+
 function getHRZone(hr, age){
   const maxHR = 220 - (parseInt(age)||30);
   const pct = hr / maxHR;
@@ -763,7 +1103,7 @@ function loadState(){
     redemptions:[],
     rewards: JSON.parse(JSON.stringify(DEFAULT_REWARDS)),
     quests:  DEFAULT_QUESTS.map(q=>({...q,progress:0,completed:false,week:''})),
-    profile: {name:'',age:'',weight:'',height:'',goal:'health',healthNotes:'',sleepGoal:8},
+    profile: {name:'',age:'',weight:'',height:'',goal:'health',healthNotes:'',sleepGoal:7.5},
     chopperMsg:null, chopperDate:null,
   };
   // migrate: ensure fields exist for older saves
@@ -772,7 +1112,12 @@ function loadState(){
   if(!s.bodyLogs)          s.bodyLogs = [];
   if(!s.monthlySnapshots)  s.monthlySnapshots = [];
   if(!s.chopperParts)      s.chopperParts = null;
-  if(!s.profile) s.profile = {name:'',age:'',weight:'',height:'',goal:'health',healthNotes:'',sleepGoal:8};
+  if(!s.achievements)      s.achievements = [];
+  if(!s.dailyQuestLog)     s.dailyQuestLog = {};
+  if(!s.weeklyChallengeClaimed) s.weeklyChallengeClaimed = {};
+  if(!s.sleepGoalHits)     s.sleepGoalHits = 0;
+  if(!s.totalCoinsEarned)  s.totalCoinsEarned = s.coins||0;
+  if(!s.profile) s.profile = {name:'',age:'',weight:'',height:'',goal:'health',healthNotes:'',sleepGoal:7.5};
   if(!s.sleepStreak) s.sleepStreak = 0;
   return s;
 }
@@ -913,8 +1258,9 @@ function submitWorkout(){
   const td=today();
   const z=getHRZone(lf.avgHR, S.profile.age||30);
   const coins=calcCoins(lf.type, z.mult, lf.duration);
-  S.workoutLogs.push({id:uid(),date:td,type:lf.type,avgHR:lf.avgHR,hrZone:z.zone,hrZoneLabel:z.label,hrZoneMult:z.mult,durationMinutes:lf.duration,coinsEarned:coins,note:document.getElementById('wNote').value.trim()});
+  S.workoutLogs.push({id:uid(),date:td,type:lf.type,avgHR:lf.avgHR,hrZone:z.zone,hrZoneLabel:z.label,hrMult:z.mult,duration:lf.duration,durationMinutes:lf.duration,coinsEarned:coins,note:document.getElementById('wNote').value.trim()});
   S.coins+=coins;
+  S.totalCoinsEarned=(S.totalCoinsEarned||0)+coins;
   S.workoutStreak=computeStreak(S.workoutLogs.map(l=>l.date));
   if(S.workoutStreak>(S.workoutStreakBest||0)) S.workoutStreakBest=S.workoutStreak;
   resetWeeklyQuests(); updateQuests();
@@ -990,6 +1336,18 @@ function logSleep(){
   const logDate=sleepDateEl&&sleepDateEl.value?sleepDateEl.value:today();
   S.sleepLogs.push({id:uid(),date:logDate,bedtime:bed,waketime:wake,durationHours:h,quality:selQuality});
   S.sleepStreak=computeStreak(S.sleepLogs.map(l=>l.date));
+  // Sleep coins
+  const goal=S.profile.sleepGoal||8;
+  if(h>=goal){
+    let bonus=30;
+    if(selQuality>=4) bonus+=10;
+    const bedH=parseInt(bed.split(':')[0]);
+    if(bedH>=20&&bedH<=23) bonus+=10;
+    S.coins=(S.coins||0)+bonus;
+    S.totalCoinsEarned=(S.totalCoinsEarned||0)+bonus;
+    S.sleepGoalHits=(S.sleepGoalHits||0)+1;
+    showToast(`+${bonus}🪙 Great sleep! Goal reached`);
+  }
   save(); renderAll(); showToast(`Sleep logged! ${formatDurH(h)} 😴`);
 }
 
@@ -1340,7 +1698,120 @@ function showToast(msg){
 ════════════════════════════════════════ */
 function renderAll(){
   document.getElementById('headerCoins').textContent=S.coins||0;
-  renderHome(); renderFood(); renderFit(); renderSleep(); renderMore();
+  renderHome(); renderFood(); renderQuest(); renderFit(); renderSleep(); renderMore();
+}
+
+/* ══ QUEST ══ */
+function renderQuest(){
+  // Level info
+  const cardioXP = getXP(S,'cardio');
+  const strXP    = getXP(S,'strength');
+  const cLv = getLevelInfo(cardioXP);
+  const sLv = getLevelInfo(strXP);
+
+  document.getElementById('cardioRankLabel').textContent = cLv.emoji+' '+cLv.rank;
+  document.getElementById('cardioLvLabel').textContent   = 'Cardio Lv.'+cLv.lv;
+  document.getElementById('cardioLvBar').style.width     = cLv.pct+'%';
+  document.getElementById('cardioLvXP').textContent      = cLv.next
+    ? cLv.xpInLv+' / '+cLv.xpToNext+' XP'
+    : 'MAX LEVEL';
+
+  document.getElementById('strRankLabel').textContent    = sLv.emoji+' '+sLv.rank;
+  document.getElementById('strLvLabel').textContent      = 'Strength Lv.'+sLv.lv;
+  document.getElementById('strLvBar').style.width        = sLv.pct+'%';
+  document.getElementById('strLvXP').textContent         = sLv.next
+    ? sLv.xpInLv+' / '+sLv.xpToNext+' XP'
+    : 'MAX LEVEL';
+
+  // Daily quests
+  const d = today();
+  const claimed = (S.dailyQuestLog||{})[d]||[];
+  const templates = getDailyQuestTemplates(cLv.lv, sLv.lv);
+  document.getElementById('questDateLabel').textContent = formatDate(d);
+  document.getElementById('dailyQuestList').innerHTML = templates.map(q=>{
+    const done = claimed.includes(q.id);
+    const met  = !done && q.check(S.workoutLogs||[], d, S.foodLogs||[], S.sleepLogs||[]);
+    return `<div class="dq-item">
+      <div class="dq-ico">${q.emoji}</div>
+      <div class="dq-info">
+        <div class="dq-title">${q.title}</div>
+        <div class="dq-desc">${q.desc}</div>
+        <div class="dq-reward">+${q.reward}🪙</div>
+      </div>
+      ${done
+        ? '<span class="dq-done">✓</span>'
+        : met
+          ? `<button class="dq-claim" onclick="claimDailyQuest('${q.id}')">Claim!</button>`
+          : `<span style="font-size:.68rem;color:var(--muted);">Pending</span>`
+      }
+    </div>`;
+  }).join('');
+
+  // Weekly challenge
+  const wk = weekStart();
+  const wkClaimed = (S.weeklyChallengeClaimed||{})[wk];
+  const ch = getWeeklyChallenge(cLv.lv, sLv.lv);
+  const totalMins = getWeekMins();
+  const chPct = Math.min(100,Math.round(totalMins/ch.target*100));
+  document.getElementById('weeklyChallenge').innerHTML = `
+    <div class="wk-challenge">
+      <div class="wk-ch-title">${ch.title}</div>
+      <div class="wk-ch-desc">${ch.desc}</div>
+      <div class="wk-prog-bar"><div class="wk-prog-fill" style="width:${chPct}%"></div></div>
+      <div class="wk-ch-foot">
+        <span>${totalMins} / ${ch.target} min</span>
+        ${wkClaimed
+          ? '<span style="font-weight:700;">✓ Completed!</span>'
+          : totalMins>=ch.target
+            ? `<button class="wk-claim-btn" onclick="claimWeeklyChallenge()">+${ch.reward}🪙 Claim</button>`
+            : `<span>+${ch.reward}🪙 reward</span>`
+        }
+      </div>
+    </div>`;
+
+  // streak bonuses
+  const cl=S.claimedBonuses||[];
+  document.getElementById('questBonuses').innerHTML=STREAK_BONUSES.map(b=>{
+    const key=`${b.days}-${weekStart()}`;
+    const claimed=cl.includes(key);
+    const can=S.workoutStreak>=b.days;
+    return `<div class="bonus-row${claimed?' bonus-done':''}">
+      <span style="font-size:1.2rem;">🔥</span>
+      <div class="bonus-info">
+        <span style="font-weight:600;">${b.label}</span> <span class="bonus-val">+${b.coins}🪙</span>
+        <div style="font-size:.63rem;color:var(--muted);">${b.days} days · current: ${S.workoutStreak||0}</div>
+      </div>
+      <div style="font-size:.68rem;font-weight:600;color:${claimed?'var(--muted)':can?'var(--sage)':'var(--muted)'}">
+        ${claimed?'Claimed ✓':can?`<button class="dq-claim" onclick="claimBonus(${b.days})">Claim!</button>`:'Locked 🔒'}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Achievements — grouped by phase
+  const earned = S.achievements||[];
+  document.getElementById('achievCount').textContent = earned.length+' / '+ACHIEV_DEF.length;
+  const phaseNames = {1:'🌱 Phase 1 · Getting Started',2:'🏃 Phase 2 · Building Habits',3:'⚡ Phase 3 · Athlete',4:'🔥 Phase 4 · Fighter',5:'🏆 Phase 5 · Champion',6:'👑 Phase 6 · Legend'};
+  const phases = [...new Set(ACHIEV_DEF.map(a=>a.phase))];
+  document.getElementById('achievementList').innerHTML = phases.map(ph=>{
+    const group = ACHIEV_DEF.filter(a=>a.phase===ph);
+    const earnedCount = group.filter(a=>earned.includes(a.id)).length;
+    return `<div style="margin-bottom:12px;">
+      <div style="font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:7px;display:flex;justify-content:space-between;">
+        <span>${phaseNames[ph]||'Phase '+ph}</span>
+        <span>${earnedCount}/${group.length}</span>
+      </div>
+      <div class="achiev-grid">${group.map(a=>{
+        const got=earned.includes(a.id);
+        return `<div class="achiev-card${got?'':' locked'}">
+          <div class="achiev-ico">${a.emoji}</div>
+          <div><div class="achiev-name">${a.name}</div><div class="achiev-desc">${a.desc}</div></div>
+        </div>`;
+      }).join('')}</div>
+    </div>`;
+  }).join('');
+
+  // Auto-check achievements on render
+  checkAchievements();
 }
 
 /* HOME */
@@ -1452,23 +1923,7 @@ function renderFit(){
     </div>`;
   }).join('');
 
-  // bonuses
-  const cl=S.claimedBonuses||[];
-  document.getElementById('fitBonuses').innerHTML=STREAK_BONUSES.map(b=>{
-    const key=`${b.days}-${weekStart()}`;
-    const claimed=cl.includes(key);
-    const can=S.workoutStreak>=b.days;
-    return `<div class="bonus-row${claimed?' bonus-done':''}">
-      <span style="font-size:1.2rem;">🔥</span>
-      <div class="bonus-info">
-        <span style="font-weight:600;">${b.label}</span> <span class="bonus-val">+${b.coins}🪙</span>
-        <div style="font-size:.63rem;color:var(--muted);">${b.days} days \xb7 current: ${S.workoutStreak||0}</div>
-      </div>
-      <div style="font-size:.68rem;font-weight:600;color:${claimed?'var(--muted)':can?'var(--sage)':'var(--muted)'}">
-        ${claimed?'Claimed ✓':can?'Earned!':'Locked 🔒'}
-      </div>
-    </div>`;
-  }).join('');
+  
 
   // workout heatmap
   const wMap={};
