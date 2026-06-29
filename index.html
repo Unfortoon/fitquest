@@ -316,6 +316,7 @@ html{scroll-behavior:smooth;}
 .sync-chip.ok     {background:rgba(90,154,96,.15);color:#3D7A42;border-color:#A0CBA4;}
 .sync-chip.error  {background:rgba(176,112,112,.15);color:#8A3A3A;border-color:#C09090;}
 .sync-chip.off    {display:none;}
+.drag-ghost{opacity:.3!important;border:2px dashed var(--sage)!important;}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
@@ -379,8 +380,12 @@ html{scroll-behavior:smooth;}
   <div class="card">
     <div class="card-title">Log a Meal</div>
     <div class="meal-chips" id="mealChips"></div>
-    <div class="sec-lbl">What did you eat?</div>
-    <textarea class="inp" id="foodText" rows="3" placeholder="e.g. Grilled salmon with rice, side salad…&#10;(Thai or English is fine — Chopper understands both 🩺)"></textarea>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div class="sec-lbl" style="margin:0;flex:0 0 auto;">📅 Date</div>
+      <input type="date" class="inp" id="foodDate" style="flex:1;font-size:14px!important;" oninput="">
+    </div>
+    <div class="sec-lbl">🍴 What did you eat?</div>
+    <textarea class="inp" id="foodText" rows="3" placeholder="e.g. Grilled salmon with rice, side salad…&#10;(Thai or English is fine — Chopper understands both 🍴)"></textarea>
     <button class="btn btn-sage btn-full" onclick="logFood()">Log Meal ✓</button>
   </div>
 
@@ -456,15 +461,19 @@ html{scroll-behavior:smooth;}
 
   <div class="card">
     <div class="card-title">Log Sleep</div>
+    <div style="margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+      <div style="font-size:.78rem;font-weight:600;color:var(--muted);">📅 Date</div>
+      <input type="date" class="inp" id="sleepDate" style="flex:1;font-size:14px!important;">
+    </div>
     <div class="sleep-times">
       <div class="time-field">
         <label>🌙 Bedtime</label>
-        <input type="time" class="time-inp" id="bedtime" value="23:00" oninput="updateSleepDur()">
+        <input type="time" class="time-inp" id="bedtime" value="22:00" oninput="updateSleepDur()">
       </div>
       <div class="sleep-arrow">→</div>
       <div class="time-field">
         <label>☀️ Wake up</label>
-        <input type="time" class="time-inp" id="waketime" value="07:00" oninput="updateSleepDur()">
+        <input type="time" class="time-inp" id="waketime" value="05:30" oninput="updateSleepDur()">
       </div>
     </div>
 
@@ -957,10 +966,12 @@ function checkStreakBonuses(){
 function logFood(){
   const txt=document.getElementById('foodText').value.trim();
   if(!txt){showToast('⚠️ Write what you ate');return;}
-  S.foodLogs.push({id:uid(),date:today(),meal:selMeal,text:txt});
+  const dateEl=document.getElementById('foodDate');
+  const logDate=dateEl&&dateEl.value?dateEl.value:today();
+  S.foodLogs.push({id:uid(),date:logDate,meal:selMeal,text:txt});
   S.foodStreak=computeStreak(S.foodLogs.map(l=>l.date));
   save(); document.getElementById('foodText').value='';
-  renderAll(); showToast('Meal logged! 🍽️');
+  renderAll(); showToast('Meal logged! 🍽️'+(logDate!==today()?' (backdated)':''));
 }
 
 /* -- SLEEP -- */
@@ -971,11 +982,13 @@ function updateSleepDur(){
   document.getElementById('sleepDurVal').textContent=formatDurH(h);
 }
 function logSleep(){
-  const bed=document.getElementById('bedtime').value||'23:00';
-  const wake=document.getElementById('waketime').value||'07:00';
+  const bed=document.getElementById('bedtime').value||'22:00';
+  const wake=document.getElementById('waketime').value||'05:30';
   const h=calcSleepDur(bed,wake);
   if(h<1||h>24){showToast('⚠️ Check times');return;}
-  S.sleepLogs.push({id:uid(),date:today(),bedtime:bed,waketime:wake,durationHours:h,quality:selQuality});
+  const sleepDateEl=document.getElementById('sleepDate');
+  const logDate=sleepDateEl&&sleepDateEl.value?sleepDateEl.value:today();
+  S.sleepLogs.push({id:uid(),date:logDate,bedtime:bed,waketime:wake,durationHours:h,quality:selQuality});
   S.sleepStreak=computeStreak(S.sleepLogs.map(l=>l.date));
   save(); renderAll(); showToast(`Sleep logged! ${formatDurH(h)} 😴`);
 }
@@ -1383,6 +1396,9 @@ function renderHome(){
 
 /* FOOD */
 function renderFood(){
+  // default date to today if empty
+  const fdEl=document.getElementById('foodDate');
+  if(fdEl&&!fdEl.value) fdEl.value=today();
   // meal chips
   document.getElementById('mealChips').innerHTML=Object.entries(MEALS).map(([k,m])=>
     `<div class="meal-chip${selMeal===k?' sel':''}" onclick="selMeal='${k}';renderFood()">${m.label}</div>`
@@ -1495,6 +1511,8 @@ function renderFit(){
 
 /* SLEEP */
 function renderSleep(){
+  const sdEl=document.getElementById('sleepDate');
+  if(sdEl&&!sdEl.value) sdEl.value=today();
   // quality row
   document.getElementById('qualityRow').innerHTML=QUALITY.map(q=>
     `<div class="q-btn${selQuality===q.val?' sel':''}" onclick="selQuality=${q.val};renderSleep()">
@@ -1631,17 +1649,78 @@ function renderMore(){
         </div>`;
       }).join('');
 
-  // manage rewards
-  document.getElementById('manageRewards').innerHTML=S.rewards.length
-    ? S.rewards.map(r=>`<div class="mg-item">
+  // manage rewards (drag-to-reorder)
+  const mgEl = document.getElementById('manageRewards');
+  if(!S.rewards.length){
+    mgEl.innerHTML='<div class="empty" style="padding:10px 0;font-size:.82rem;">No rewards — add one above!</div>';
+  } else {
+    mgEl.innerHTML = S.rewards.map(r=>`<div class="mg-item" draggable="true" data-id="${r.id}" style="cursor:grab;">
+        <span class="drag-handle" style="font-size:1rem;color:var(--muted);padding:0 4px 0 0;touch-action:none;">⠿</span>
         <span style="font-size:1.25rem;">${r.emoji||'🎁'}</span>
         <div class="mg-info">
           <div class="mg-name">${esc(r.name)}</div>
           <div class="mg-sub"><span class="cat-pill cat-${r.category}">${r.category}</span> · ${r.cost}🪙</div>
         </div>
         <button class="del-btn" onclick="deleteReward('${r.id}')">✕</button>
-      </div>`).join('')
-    : '<div class="empty" style="padding:10px 0;font-size:.82rem;">No rewards — add one above!</div>';
+      </div>`).join('');
+    initRewardDrag(mgEl);
+  }
+}
+
+function initRewardDrag(container){
+  let dragging = null;
+  container.querySelectorAll('.mg-item').forEach(item=>{
+    item.addEventListener('dragstart', e=>{
+      dragging = item;
+      setTimeout(()=>item.classList.add('drag-ghost'),0);
+    });
+    item.addEventListener('dragend', ()=>{
+      item.classList.remove('drag-ghost');
+      dragging = null;
+      // persist new order
+      const ids = [...container.querySelectorAll('.mg-item')].map(el=>el.dataset.id);
+      S.rewards = ids.map(id=>S.rewards.find(r=>r.id===id)).filter(Boolean);
+      save();
+    });
+    item.addEventListener('dragover', e=>{
+      e.preventDefault();
+      if(dragging && dragging!==item){
+        const rect=item.getBoundingClientRect();
+        const mid=rect.top+rect.height/2;
+        if(e.clientY<mid) container.insertBefore(dragging,item);
+        else container.insertBefore(dragging,item.nextSibling);
+      }
+    });
+    // Touch support
+    let touchSrc=null, touchClone=null;
+    item.addEventListener('touchstart', e=>{
+      touchSrc=item;
+      const t=e.touches[0];
+      touchClone=item.cloneNode(true);
+      touchClone.style.cssText=`position:fixed;opacity:.85;pointer-events:none;z-index:9999;width:${item.offsetWidth}px;left:${item.getBoundingClientRect().left}px;top:${item.getBoundingClientRect().top}px;`;
+      document.body.appendChild(touchClone);
+      item.classList.add('drag-ghost');
+    },{passive:true});
+    item.addEventListener('touchmove', e=>{
+      e.preventDefault();
+      const t=e.touches[0];
+      if(touchClone){ touchClone.style.left=t.clientX-item.offsetWidth/2+'px'; touchClone.style.top=t.clientY-30+'px'; }
+      const el=document.elementFromPoint(t.clientX,t.clientY);
+      const target=el?.closest('.mg-item');
+      if(target&&target!==touchSrc){
+        const rect=target.getBoundingClientRect();
+        if(t.clientY<rect.top+rect.height/2) container.insertBefore(touchSrc,target);
+        else container.insertBefore(touchSrc,target.nextSibling);
+      }
+    },{passive:false});
+    item.addEventListener('touchend', ()=>{
+      if(touchClone){touchClone.remove();touchClone=null;}
+      if(touchSrc) touchSrc.classList.remove('drag-ghost');
+      const ids=[...container.querySelectorAll('.mg-item')].map(el=>el.dataset.id);
+      S.rewards=ids.map(id=>S.rewards.find(r=>r.id===id)).filter(Boolean);
+      save(); touchSrc=null;
+    });
+  });
 }
 
 /* HELPERS */
