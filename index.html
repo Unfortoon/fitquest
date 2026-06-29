@@ -588,8 +588,30 @@ html{scroll-behavior:smooth;}
 
   <!-- 4. Data -->
   <div class="settings-group">
-    <div class="settings-group-title">Data</div>
+    <div class="settings-group-title">Data &amp; Sync</div>
+
+    <!-- Sync Code card -->
+    <div class="settings-block" style="margin-bottom:8px;">
+      <div style="font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;">Cloud Sync Code</div>
+      <div style="font-size:.76rem;color:var(--text);margin-bottom:10px;line-height:1.5;">ใช้โค้ดนี้เพื่อเชื่อมต่อกับเครื่องอื่น — กด Copy แล้วนำไปกรอกในเครื่องใหม่</div>
+      <div style="display:flex;gap:7px;align-items:center;margin-bottom:12px;">
+        <div id="syncCodeDisplay" style="flex:1;background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px 11px;font-size:.78rem;font-family:monospace;word-break:break-all;color:var(--sage);font-weight:600;"></div>
+        <button class="btn btn-blush" style="padding:8px 12px;font-size:.75rem;white-space:nowrap;" onclick="copySyncCode()">Copy</button>
+      </div>
+      <div style="font-size:.68rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px;">เชื่อมต่อจากเครื่องอื่น</div>
+      <div style="display:flex;gap:7px;">
+        <input class="inp" id="syncCodeInput" placeholder="วางโค้ดจากเครื่องอื่น…" style="flex:1;font-size:14px!important;">
+        <button class="btn btn-sage" style="padding:8px 12px;font-size:.75rem;white-space:nowrap;" onclick="linkDevice()">Link</button>
+      </div>
+      <div id="linkStatus" style="font-size:.7rem;color:var(--muted);margin-top:5px;"></div>
+    </div>
+
     <div class="s-row-wrap">
+      <div class="s-row-item" onclick="manualSync()">
+        <span style="font-size:1rem;">☁️</span>
+        <span style="flex:1;font-size:.86rem;">Sync Now</span>
+        <span id="syncRowStatus" style="color:var(--muted);font-size:.75rem;"></span>
+      </div>
       <div class="s-row-item" onclick="generateMonthlyReport()">
         <span style="font-size:1rem;">📋</span>
         <span style="flex:1;font-size:.86rem;">Monthly Report (HTML)</span>
@@ -1564,6 +1586,9 @@ function renderMore(){
     <div style="font-size:.82rem;margin-top:5px;color:var(--muted);">Fill in your profile below to see your summary</div>
   </div>`;
 
+  // Sync code display
+  renderSyncCode();
+
   // ── Editable profile fields ──
   document.getElementById('pName').value=p.name||'';
   document.getElementById('pAge').value=p.age||'';
@@ -1655,11 +1680,37 @@ function getUserId(){
 }
 
 function setSyncChip(state, label){
-  const el = document.getElementById('syncChip');
-  if(!el) return;
-  if(!supaClient){ el.className='sync-chip off'; return; }
-  el.className = 'sync-chip ' + state;
-  el.textContent = label;
+  const chip = document.getElementById('syncChip');
+  const row  = document.getElementById('syncRowStatus');
+  if(chip){
+    if(!supaClient){ chip.className='sync-chip off'; }
+    else { chip.className='sync-chip '+state; chip.textContent=label; }
+  }
+  if(row) row.textContent = supaClient ? label : 'Not configured';
+}
+
+function renderSyncCode(){
+  const el = document.getElementById('syncCodeDisplay');
+  if(el) el.textContent = getUserId();
+}
+
+function copySyncCode(){
+  const code = getUserId();
+  navigator.clipboard.writeText(code).then(()=>showToast('Sync code copied!')).catch(()=>{
+    const el = document.getElementById('syncCodeDisplay');
+    if(el){ const r=document.createRange(); r.selectNode(el); window.getSelection().removeAllRanges(); window.getSelection().addRange(r); }
+    showToast('Select & copy the code manually');
+  });
+}
+
+function linkDevice(){
+  const code = document.getElementById('syncCodeInput').value.trim();
+  const statusEl = document.getElementById('linkStatus');
+  if(!code||code.length<10){ if(statusEl) statusEl.textContent='⚠️ Invalid code'; return; }
+  if(!confirm('This replaces local data with cloud data from the other device. Continue?')) return;
+  localStorage.setItem('fq_uid', code);
+  if(statusEl) statusEl.textContent='Linking…';
+  pullFromCloud().then(()=>{ if(statusEl) statusEl.textContent='✓ Linked and synced!'; });
 }
 
 async function pushToCloud(){
@@ -1676,7 +1727,8 @@ async function pushToCloud(){
     setTimeout(()=>setSyncChip('idle','☁ Cloud'),4000);
   } catch(e){
     setSyncChip('error','☁ Error');
-    console.error('Sync push failed', e);
+    console.error('Push failed:', e.message);
+    showToast('Sync error — see browser console');
   }
 }
 
@@ -1689,31 +1741,28 @@ async function pullFromCloud(){
       .select('data, updated_at')
       .eq('user_id', getUserId())
       .single();
-    if(error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+    if(error && error.code !== 'PGRST116') throw error;
     if(data && data.data){
       const remote = data.data;
       const localTime = S.lastSaved || 0;
       const remoteTime = new Date(data.updated_at).getTime();
       if(remoteTime > localTime){
-        // Remote is newer — merge (remote wins, keep local if key missing)
-        const merged = Object.assign({}, S, remote);
-        S = merged;
+        S = Object.assign({}, S, remote);
         localStorage.setItem('fq3', JSON.stringify(S));
-        renderAll();
+        renderAll(); renderSyncCode();
         setSyncChip('ok','☁ Loaded ✓');
-        showToast('Data synced from cloud!');
+        showToast('Synced from cloud!');
       } else {
         setSyncChip('ok','☁ Up to date');
       }
     } else {
-      // No remote data yet — push local up
-      await pushToCloud();
-      return;
+      await pushToCloud(); return;
     }
     setTimeout(()=>setSyncChip('idle','☁ Cloud'),4000);
   } catch(e){
     setSyncChip('error','☁ Error');
-    console.error('Sync pull failed', e);
+    console.error('Pull failed:', e.message);
+    showToast('Sync error — see browser console');
   }
 }
 
@@ -1721,7 +1770,7 @@ let _pushTimer = null;
 function schedulePush(){
   if(!supaClient) return;
   clearTimeout(_pushTimer);
-  _pushTimer = setTimeout(pushToCloud, 3000); // debounce 3s after last save
+  _pushTimer = setTimeout(pushToCloud, 3000);
 }
 
 function manualSync(){
@@ -1729,9 +1778,10 @@ function manualSync(){
   pullFromCloud();
 }
 
-/* BOOT */
+/* ═══ BOOT ═══ */
 setSyncChip(supaClient?'idle':'off', '☁ Cloud');
 renderAll();
+renderSyncCode();
 pullFromCloud();
 </script>
 </body>
